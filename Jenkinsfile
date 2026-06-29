@@ -1,12 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-//  RVCE Todo App — Jenkins Declarative Pipeline (Lab Demo)
-// ═══════════════════════════════════════════════════════════════
-//
-//  This pipeline is designed specifically for a DevOps laboratory
-//  practical demonstration. It verifies SCM connectivity, project
-//  structure, and dependencies without compiling the React app
-//  (to ensure compatibility with older Node.js runtimes).
-//
+// RVCE Todo App — Jenkins Declarative Pipeline (Lab Demo)
 // ═══════════════════════════════════════════════════════════════
 
 pipeline {
@@ -14,73 +7,64 @@ pipeline {
 
     stages {
 
-        // ── Stage 1: Checkout ──────────────────────────────
-        // Checks out the code from GitHub and prints repo info
+        // ───────────────────────────────────────────────
+        // Stage 1: Checkout Source Code
+        // ───────────────────────────────────────────────
         stage('Checkout') {
             steps {
                 echo '📥 Checking out source code...'
                 checkout scm
-                
+
                 echo '📋 Repository Information:'
                 echo "Workspace: ${WORKSPACE}"
             }
         }
 
-        // ── Stage 2: Verify Project Structure ──────────────
-        // Confirms all required laboratory files are present
+        // ───────────────────────────────────────────────
+        // Stage 2: Verify Project Structure
+        // ───────────────────────────────────────────────
         stage('Verify Project Structure') {
             steps {
-                echo '🔍 Checking repository structure...'
-                
                 script {
+
+                    echo "🔍 Checking project files..."
+
                     def requiredFiles = [
-                        'todo-app/package.json',
-                        'todo-app/Dockerfile',
-                        'todo-app/docker-compose.yml',
-                        'todo-app/README.md',
-                        'todo-app/Jenkinsfile'
+                        'package.json',
+                        'Dockerfile',
+                        'docker-compose.yml',
+                        'README.md',
+                        'Jenkinsfile'
                     ]
-                    
+
                     for (file in requiredFiles) {
                         if (!fileExists(file)) {
-                            error("❌ Missing required file: ${file}")
+                            error("Missing required file: ${file}")
                         }
                     }
-                    
+
                     def requiredDirs = [
-                        'todo-app',
-                        'todo-app/client',
-                        'todo-app/server'
+                        'client',
+                        'server'
                     ]
-                    
+
                     for (dir in requiredDirs) {
                         if (!fileExists(dir)) {
-                            error("❌ Missing required directory: ${dir}")
+                            error("Missing required directory: ${dir}")
                         }
                     }
-                    
-                    echo "✅ All required DevOps laboratory files verified successfully."
+
+                    echo "✅ Project structure verified successfully."
                 }
             }
         }
 
-        // ── Stage 3: Install Dependencies ──────────────────
-        // Tests dependency installation for backend and frontend
-        stage('Install Dependencies') {
+        // ───────────────────────────────────────────────
+        // Stage 3: Install Server Dependencies
+        // ───────────────────────────────────────────────
+        stage('Install Server Dependencies') {
             steps {
-                echo '📦 Installing Server Dependencies...'
-                dir('todo-app/server') {
-                    script {
-                        if (isUnix()) {
-                            sh 'npm install'
-                        } else {
-                            bat 'npm install'
-                        }
-                    }
-                }
-
-                echo '📦 Installing Client Dependencies...'
-                dir('todo-app/client') {
+                dir('server') {
                     script {
                         if (isUnix()) {
                             sh 'npm install'
@@ -92,66 +76,94 @@ pipeline {
             }
         }
 
-        // ── Stage 4: Verify Application ────────────────────
-        // Prints runtime versions and verification statuses
-        stage('Verify Application') {
+        // ───────────────────────────────────────────────
+        // Stage 4: Install Client Dependencies
+        // ───────────────────────────────────────────────
+        stage('Install Client Dependencies') {
             steps {
-                echo '⚙️  System Runtime Information:'
+                dir('client') {
+                    script {
+                        if (isUnix()) {
+                            sh 'npm install'
+                        } else {
+                            bat 'npm install'
+                        }
+                    }
+                }
+            }
+        }
+
+        // ───────────────────────────────────────────────
+        // Stage 5: Verify Environment
+        // ───────────────────────────────────────────────
+        stage('Verify Environment') {
+            steps {
+
+                echo "Node Version"
+
                 script {
                     if (isUnix()) {
-                        sh 'node -v || echo Node Not Found'
-                        sh 'npm -v || echo NPM Not Found'
-                        sh 'git --version || echo Git Not Found'
+                        sh 'node -v'
+                        sh 'npm -v'
+                        sh 'git --version'
                     } else {
-                        bat 'node -v || echo Node Not Found'
-                        bat 'npm -v || echo NPM Not Found'
-                        bat 'git --version || echo Git Not Found'
+                        bat 'node -v'
+                        bat 'npm -v'
+                        bat 'git --version'
                     }
                 }
-                
-                echo ''
-                echo 'Repository Verified Successfully'
-                echo 'Frontend Found'
-                echo 'Backend Found'
-                echo 'Docker Configuration Found'
-                echo 'Jenkinsfile Found'
-                echo 'Project Ready for Deployment'
+
+                echo "Repository Verified"
+                echo "Frontend Found"
+                echo "Backend Found"
+                echo "Docker Configuration Found"
+                echo "Jenkinsfile Found"
             }
         }
 
-        // ── Stage 5: Pipeline Complete ─────────────────────
-        // Displays the final success banner for the laboratory
+        // ───────────────────────────────────────────────
+        // Stage 6: Success
+        // ───────────────────────────────────────────────
         stage('Pipeline Complete') {
             steps {
+
                 echo '''
-====================================
-BUILD SUCCESSFUL
-====================================
+========================================
+        BUILD SUCCESSFUL
+========================================
 
-GitHub Integration ✔
-Repository Checkout ✔
-Dependencies Installed ✔
-Project Verified ✔
+✔ GitHub Repository Connected
 
-This pipeline is intended for a college DevOps laboratory demonstration.
+✔ Source Code Checked Out
 
-React compilation has intentionally been skipped because the Jenkins server uses an older Node.js runtime.
+✔ Project Structure Verified
 
-The repository is ready for GitHub, Docker, Azure, Webhooks, and further deployment.
+✔ Dependencies Installed
 
-====================================
+✔ Environment Verified
+
+The project is ready for Docker,
+GitHub, Azure, Webhooks and further
+DevOps experiments.
+
+========================================
 '''
             }
         }
     }
 
-    // ── Post-Build Actions ──────────────────────────────────
     post {
+
         success {
-            echo '✅ Pipeline execution completed successfully!'
+            echo "🎉 Pipeline executed successfully!"
         }
+
         failure {
-            echo '❌ Pipeline failed. Please check the logs above.'
+            echo "❌ Pipeline failed. Check the console output."
+        }
+
+        always {
+            cleanWs()
         }
     }
 }
